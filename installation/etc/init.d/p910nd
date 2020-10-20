@@ -31,7 +31,7 @@ start_p910nd() {
 	local section="$1" runas_root
 	config_get_bool "enabled" "$section" "enabled" '1'
 	if [ "$enabled" -gt 0 ]; then
-		args="-d "
+		args="-d " # runs in foreground & prints log messages to stdout
 		config_get port "$section" port
 		name=p910${port}d
 		append_bool "$section" bidirectional "-b"
@@ -53,7 +53,26 @@ start_p910nd() {
 		config_get mdns_mdl "$section" mdns_mdl
 		config_get mdns_cmd "$section" mdns_cmd
 		[ "$mdns" -gt 0 ] && procd_add_mdns "pdl-datastream" "tcp" "$((port+9100))" "note=$mdns_note" "ty=$mdns_ty" "product=$mdns_product" "usb_MFG=$mdns_mfg" "usb_MDL=$mdns_mdl" "usb_CMD=$mdns_cmd"
+		
+		procd_set_param stdout 1 # relay stdout to logd
+		procd_set_param stderr 1 # relay stderr to logd
 
 		procd_close_instance
 	fi
 }
+
+# src: https://man.cx/p910nd
+# NAME
+#   p910nd − port 9100+n printer daemon
+# 
+# SYNOPSIS
+#   p910nd [-f device] [-i bindaddr] [-bvd] [0|1|2]
+# 
+# DESCRIPTION
+#   p910nd is a small daemon that copies any data received on the port it is listening on to the corresponding printer port. Port 9100 is copied to /dev/lp0, 9101 to /dev/lp1 and 9102 to /dev/lp2. The default is port 9100 to /dev/lp0.
+# 
+#   -f option, to specify a different printer device, e.g. /dev/usblp0.
+#   -i option, to specify binding to one address instead of all interfaces which is the default.
+#   -b option turns on bidirectional copying.
+#   -v option shows the version number.
+#   -d option causes the daemon to run in the foreground in standalone mode and prints log messages to stdout for debugging.
