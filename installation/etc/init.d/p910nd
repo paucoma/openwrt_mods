@@ -61,6 +61,11 @@ start_p910nd() {
 	fi
 }
 
+service_triggers(){
+        procd_add_interface_trigger "interface.*.up" wan "/etc/init.d/p910nd" restart
+        logger -t p910nd "Restarting p910nd service due to up trigger of wan"
+}
+
 # src: https://man.cx/p910nd
 # NAME
 #   p910nd − port 9100+n printer daemon
